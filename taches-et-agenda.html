@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tâches &amp; Agenda</title>
+<style>
+  :root {
+    --ink: #181A1E;
+    --muted: #787D85;
+    --surface: #F7F6F3;
+    --border: #E7E4DC;
+    --accent: #1E4B8F;
+    --p1: #D6483D;
+    --p2: #E0912C;
+    --p3: #C7A227;
+    --p4: #A6ABB3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #FFFFFF;
+    color: var(--ink);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  @media (min-width: 800px) {
+    .grid { grid-template-columns: 1fr 1.5fr; }
+  }
+  h2 {
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    margin: 0;
+  }
+  .panel-title { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .count { margin-left: auto; font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); }
+  .empty {
+    font-size: 0.9rem;
+    padding: 20px;
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px dashed var(--border);
+  }
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .task-item, .agenda-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sq { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; background: var(--accent); }
+  .task-name { font-size: 0.9rem; }
+  .filters { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .chip {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .range { margin-left: auto; font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); }
+  .day-group { position: relative; margin-bottom: 28px; padding-left: 24px; }
+  .rail { position: absolute; left: 6px; top: 4px; bottom: 4px; width: 1px; background: var(--border); }
+  .day-dot { position: absolute; left: 0; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px #fff; }
+  .day-title { font-family: Georgia, serif; font-size: 0.95rem; margin-bottom: 10px; text-transform: capitalize; }
+  .agenda-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .agenda-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .agenda-title { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-time { font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); flex-shrink: 0; }
+  .scroll-area { position: relative; max-height: 70vh; overflow-y: auto; }
+  footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); }
+  footer a { color: var(--accent); text-decoration: none; margin: 0 8px; }
+  input[type=number] { width: 60px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); font-family: ui-monospace, monospace; font-size: 0.75rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header"><h1>Tâches &amp; Agenda</h1></div>
+
+  <div class="grid">
+    <div>
+      <div class="panel-title">
+        <h2>Tâches sans échéance</h2>
+        <span class="count" id="taskCount"></span>
+      </div>
+      <div id="tasksPanel"></div>
+    </div>
+
+    <div>
+      <div class="panel-title">
+        <span class="sq" style="background: var(--accent);"></span>
+        <h2>Agenda — Famille Delangue</h2>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="scroll-area" id="agendaPanel"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div id="dataDate"></div>
+    <div style="margin-top:8px;">
+      <a href="https://calendar.google.com/calendar/u/0/r?cid=25f204adf20993aac6747ec245416a386fc2fb8ebaab8a7166813b09ee0301a3%40group.calendar.google.com" target="_blank">Ouvrir Google Calendar ↗</a>
+      ·
+      <a href="https://app.todoist.com/app/project/tache-travail-6hJRcVmG3PhWQW3J" target="_blank">Todoist Travail ↗</a>
+      ·
+      <a href="https://app.todoist.com/app/project/tache-maison-6hJRcVphP37HFv47" target="_blank">Todoist Maison ↗</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+// --- Données figées (Todoist + Google Calendar "Famille Delangue") ---
+// Pour rafraîchir : redemander à Claude un nouveau fichier avec les données à jour,
+// puis re-déposer le fichier sur ton hébergeur (ex: Netlify Drop).
+const TASKS_DATA = [
+  { id: "6hJRcW4wf8Qw6MHr", content: "Analyse Devis Ascenseur", projectId: "6hJRcVphP37HFv47", priority: "p4", due: null },
+  { id: "6hJRcW8G5JrQR38f", content: "Courses", projectId: "6hJRcVphP37HFv47", priority: "p4", due: "2026-08-22" },
+  { id: "6hJh5PG9hjv35c9f", content: "Devis femme de ménage Amiens", projectId: "6hJRcVphP37HFv47", priority: "p4", due: null },
+];
+
+const EVENTS_DATA = [
+  { id: "1", title: "Week end Fort Mahon", start: "2026-08-20T00:00:00", allDay: true },
+  { id: "2", title: "Échographie", start: "2026-08-27T10:30:00", allDay: false },
+  { id: "3", title: "Rendez-vous sage-femme", start: "2026-09-03T09:00:00", allDay: false },
+  { id: "4", title: "Anniversaire Laurence", start: "2026-09-08T00:00:00", allDay: true },
+  { id: "5", title: "Rendez-vous dermato", start: "2026-09-08T09:15:00", allDay: false },
+  { id: "6", title: "Week-end à Lyon", start: "2026-09-12T00:00:00", allDay: true },
+  { id: "7", title: "Anniversaire Maxime", start: "2026-09-14T00:00:00", allDay: true },
+  { id: "8", title: "Rendez-vous dentiste", start: "2026-09-18T09:15:00", allDay: false },
+  { id: "9", title: "Anniversaire Jacky", start: "2026-09-23T00:00:00", allDay: true },
+  { id: "10", title: "Week-end avec Chichi à Paris", start: "2026-10-03T00:00:00", allDay: true },
+  { id: "11", title: "Échographie T3", start: "2026-10-15T09:30:00", allDay: false },
+  { id: "12", title: "Anniversaire Jérôme", start: "2026-10-31T00:00:00", allDay: true },
+  { id: "13", title: "Anniversaire François", start: "2026-10-31T00:00:00", allDay: true },
+  { id: "14", title: "Visite de la maternité", start: "2026-11-03T15:00:00", allDay: false },
+  { id: "15", title: "Anniversaire Lou", start: "2026-11-08T00:00:00", allDay: true },
+];
+
+const DATA_UPDATED_AT = "2026-08-22T21:54:00";
+
+const PROJECT_META = {
+  "6hJRcVmG3PhWQW3J": "Travail",
+  "6hJRcVphP37HFv47": "Maison",
+};
+const PRIORITY_COLOR = { p1: "var(--p1)", p2: "var(--p2)", p3: "var(--p3)", p4: "var(--p4)" };
+const PRIORITY_ORDER = { p1: 0, p2: 1, p3: 2, p4: 3 };
+const PERIOD_OPTIONS = [7, 15, 30, 60];
+
+let periodDays = 15;
+
+function pad(n) { return String(n).padStart(2, "0"); }
+function isoDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function frDate(d) { return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
+function frTime(d) { return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }); }
+function frDateTime(d) { return d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); }
+
+function render() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const periodEnd = new Date(today); periodEnd.setDate(periodEnd.getDate() + periodDays);
+
+  // Tâches sans échéance
+  const undated = TASKS_DATA.filter(t => !t.due).sort((a,b) => (PRIORITY_ORDER[a.priority]??4) - (PRIORITY_ORDER[b.priority]??4));
+  document.getElementById("taskCount").textContent = undated.length;
+  const byProject = {};
+  undated.forEach(t => { const k = t.projectId || "autre"; (byProject[k] = byProject[k] || []).push(t); });
+
+  const tasksPanel = document.getElementById("tasksPanel");
+  if (undated.length === 0) {
+    tasksPanel.innerHTML = `<div class="empty">Aucune tâche sans échéance.</div>`;
+  } else {
+    tasksPanel.innerHTML = Object.entries(byProject).map(([pid, items]) => `
+      <div class="section-label">${PROJECT_META[pid] || "Autre"}</div>
+      ${items.map(t => `
+        <div class="task-item">
+          <span class="dot" style="background:${PRIORITY_COLOR[t.priority] || PRIORITY_COLOR.p4}"></span>
+          <span class="task-name">${t.content}</span>
+        </div>
+      `).join("")}
+    `).join("");
+  }
+
+  // Filtres
+  const filters = document.getElementById("filters");
+  filters.innerHTML = PERIOD_OPTIONS.map(d => `
+    <button class="chip ${d === periodDays ? "active" : ""}" data-days="${d}">${d}j</button>
+  `).join("") + `
+    <input type="number" id="customPeriod" placeholder="autre" min="1" max="365">
+    <span class="range">${isoDate(today)} → ${isoDate(periodEnd)}</span>
+  `;
+  filters.querySelectorAll(".chip").forEach(btn => {
+    btn.addEventListener("click", () => { periodDays = parseInt(btn.dataset.days, 10); render(); });
+  });
+  filters.querySelector("#customPeriod").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const n = parseInt(e.target.value, 10);
+      if (n > 0 && n <= 365) { periodDays = n; render(); }
+    }
+  });
+
+  // Agenda = événements + tâches datées, fusionnés et filtrés
+  const datedTasks = TASKS_DATA.filter(t => t.due).map(t => ({
+    kind: "task", id: t.id, title: t.content, start: `${t.due}T00:00:00`, allDay: true, priority: t.priority
+  }));
+  const events = EVENTS_DATA.map(e => ({ kind: "event", ...e }));
+  const entries = [...events, ...datedTasks]
+    .filter(e => { const s = new Date(e.start); return s >= today && s < periodEnd; })
+    .sort((a,b) => {
+      const diff = new Date(a.start) - new Date(b.start);
+      if (diff !== 0) return diff;
+      return a.kind === "task" ? -1 : 1;
+    });
+
+  const groups = {};
+  entries.forEach(e => {
+    const d = new Date(e.start);
+    const key = isoDate(d);
+    (groups[key] = groups[key] || { date: d, items: [] }).items.push(e);
+  });
+  const dayGroups = Object.values(groups).sort((a,b) => a.date - b.date);
+
+  const agendaPanel = document.getElementById("agendaPanel");
+  if (dayGroups.length === 0) {
+    agendaPanel.innerHTML = `<div class="empty">Rien sur cette période. L'agenda est dégagé.</div>`;
+  } else {
+    agendaPanel.innerHTML = `<div class="rail"></div>` + dayGroups.map(g => `
+      <div class="day-group">
+        <div class="day-dot"></div>
+        <div class="day-title">${frDate(g.date)}</div>
+        ${g.items.map(e => `
+          <div class="agenda-item">
+            <div class="agenda-row">
+              <div class="agenda-left">
+                ${e.kind === "task"
+                  ? `<span class="dot" style="background:${PRIORITY_COLOR[e.priority] || PRIORITY_COLOR.p4}"></span>`
+                  : `<span class="sq"></span>`}
+                <span class="agenda-title">${e.title}</span>
+              </div>
+              ${!e.allDay ? `<span class="agenda-time">${frTime(new Date(e.start))}</span>` : ""}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("dataDate").textContent = `Données affichées au ${frDateTime(new Date(DATA_UPDATED_AT))}`;
+}
+
+render();
+</script>
+</body>
+</html>
