@@ -184,6 +184,7 @@
   </div>
 
   <div id="view-listes" style="display:none;">
+    <div class="filters" id="listSelector"></div>
     <div class="summary" id="listSummary"></div>
     <div id="listPanel"></div>
   </div>
@@ -254,37 +255,37 @@ const EVENTS_DATA = [
 
 // Liste "Affaires Bébé" (base Airtable "Listes Famille Delangue")
 const LISTE_DATA = [
-  { cat: "Chambre & couchage", nom: "Lit bébé / berceau", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Chambre & couchage", nom: "Matelas + protège-matelas", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Chambre & couchage", nom: "Gigoteuses", qte: 3, statut: "À acheter", note: "Plusieurs tailles" },
-  { cat: "Chambre & couchage", nom: "Draps housses", qte: 4, statut: "À acheter", note: "" },
-  { cat: "Chambre & couchage", nom: "Babyphone", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Chambre & couchage", nom: "Veilleuse", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Habillement", nom: "Bodies", qte: 8, statut: "À acheter", note: "0-3 mois" },
-  { cat: "Habillement", nom: "Pyjamas", qte: 6, statut: "À acheter", note: "" },
-  { cat: "Habillement", nom: "Brassières / gilets", qte: 3, statut: "À acheter", note: "" },
-  { cat: "Habillement", nom: "Bonnets", qte: 2, statut: "À acheter", note: "" },
-  { cat: "Habillement", nom: "Moufles anti-griffures", qte: 2, statut: "À acheter", note: "" },
-  { cat: "Habillement", nom: "Chaussons", qte: 2, statut: "À acheter", note: "" },
-  { cat: "Toilette & change", nom: "Couches taille naissance", qte: 2, statut: "À acheter", note: "Paquets" },
-  { cat: "Toilette & change", nom: "Coton + liniment", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Toilette & change", nom: "Table à langer + matelas", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Toilette & change", nom: "Baignoire bébé", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Toilette & change", nom: "Thermomètre de bain", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Toilette & change", nom: "Trousse de toilette", qte: 1, statut: "À acheter", note: "Savon, brosse douce, ciseaux" },
-  { cat: "Repas & allaitement", nom: "Biberons", qte: 4, statut: "À acheter", note: "" },
-  { cat: "Repas & allaitement", nom: "Chauffe-biberon", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Repas & allaitement", nom: "Coussin d'allaitement", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Repas & allaitement", nom: "Stérilisateur", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Repas & allaitement", nom: "Bavoirs", qte: 6, statut: "À acheter", note: "" },
-  { cat: "Sorties & transport", nom: "Poussette", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Sorties & transport", nom: "Siège auto groupe 0+", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Sorties & transport", nom: "Porte-bébé / écharpe", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Sorties & transport", nom: "Sac à langer", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Administratif", nom: "Déclaration de naissance mairie", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Administratif", nom: "Inscription CAF", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Administratif", nom: "Ajout mutuelle / sécurité sociale", qte: 1, statut: "À acheter", note: "" },
-  { cat: "Administratif", nom: "Choisir le pédiatre", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Lit bébé / berceau", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Matelas + protège-matelas", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Gigoteuses", qte: 3, statut: "À acheter", note: "Plusieurs tailles" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Draps housses", qte: 4, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Babyphone", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Veilleuse", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Bodies", qte: 8, statut: "À acheter", note: "0-3 mois" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Pyjamas", qte: 6, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Brassières / gilets", qte: 3, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Bonnets", qte: 2, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Moufles anti-griffures", qte: 2, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Chaussons", qte: 2, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Couches taille naissance", qte: 2, statut: "À acheter", note: "Paquets" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Coton + liniment", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Table à langer + matelas", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Baignoire bébé", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Thermomètre de bain", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Trousse de toilette", qte: 1, statut: "À acheter", note: "Savon, brosse douce, ciseaux" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Biberons", qte: 4, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Chauffe-biberon", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Coussin d'allaitement", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Stérilisateur", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Bavoirs", qte: 6, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Poussette", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Siège auto groupe 0+", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Porte-bébé / écharpe", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Sac à langer", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Déclaration de naissance mairie", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Inscription CAF", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Ajout mutuelle / sécurité sociale", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Choisir le pédiatre", qte: 1, statut: "À acheter", note: "" },
 ];
 
 const STATUT_STYLE = {
@@ -406,9 +407,23 @@ function render() {
   document.getElementById("dataDate").textContent = `Données affichées au ${frDateTime(new Date(DATA_UPDATED_AT))}`;
 }
 
+let listeActive = "Affaires Bébé";
+
 function renderListe() {
-  const total = LISTE_DATA.length;
-  const restant = LISTE_DATA.filter(i => i.statut === "À acheter").length;
+  const noms = [...new Set(LISTE_DATA.map(i => i.liste))];
+  if (!noms.includes(listeActive)) listeActive = noms[0];
+
+  document.getElementById("listSelector").innerHTML = noms.map(n => `
+    <button class="chip ${n === listeActive ? "active" : ""}" data-liste="${n}">${n}</button>
+  `).join("");
+
+  document.querySelectorAll("#listSelector .chip").forEach(btn => {
+    btn.addEventListener("click", () => { listeActive = btn.dataset.liste; renderListe(); });
+  });
+
+  const items = LISTE_DATA.filter(i => i.liste === listeActive);
+  const total = items.length;
+  const restant = items.filter(i => i.statut === "À acheter").length;
   const fait = total - restant;
 
   document.getElementById("listSummary").innerHTML = `
@@ -418,21 +433,21 @@ function renderListe() {
   `;
 
   const byCat = {};
-  LISTE_DATA.forEach(i => { (byCat[i.cat] = byCat[i.cat] || []).push(i); });
+  items.forEach(i => { (byCat[i.cat] = byCat[i.cat] || []).push(i); });
 
   const cats = CAT_ORDER.filter(c => byCat[c]);
   Object.keys(byCat).forEach(c => { if (!cats.includes(c)) cats.push(c); });
 
   document.getElementById("listPanel").innerHTML = cats.map(cat => {
-    const items = byCat[cat];
-    const reste = items.filter(i => i.statut === "À acheter").length;
+    const its = byCat[cat];
+    const reste = its.filter(i => i.statut === "À acheter").length;
     return `
       <div class="cat-block">
         <div class="cat-head">
           <h3>${cat}</h3>
-          <span class="cat-count">${reste}/${items.length} restants</span>
+          <span class="cat-count">${reste}/${its.length} restants</span>
         </div>
-        ${items.map(i => {
+        ${its.map(i => {
           const st = STATUT_STYLE[i.statut] || STATUT_STYLE["À acheter"];
           return `
             <div class="list-row">
