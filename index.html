@@ -179,6 +179,27 @@
     margin: 0 0 12px 0;
   }
   .live-note a { color: var(--accent); text-decoration: none; margin-left: 8px; }
+  .editor-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .editor-bar .chip { margin-left: auto; }
+  #instructionsBox {
+    width: 100%;
+    min-height: 60vh;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: vertical;
+  }
+  #instructionsBox:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
 </style>
 </head>
 <body>
@@ -188,19 +209,24 @@
   <div class="tabs">
     <button class="tab active" data-view="agenda">Tâches &amp; Agenda</button>
     <button class="tab" data-view="listes">Listes</button>
+    <button class="tab" data-view="instructions">Instructions</button>
+  </div>
+
+  <div id="view-instructions" style="display:none;">
+    <div class="editor-bar">
+      <span class="live-note" id="editorStatus">Chargement…</span>
+      <button id="saveBtn" class="chip">Enregistrer</button>
+    </div>
+    <textarea id="instructionsBox" placeholder="Écrivez ici… (enregistrement automatique)"></textarea>
   </div>
 
   <div id="view-listes" style="display:none;">
-    <p class="live-note">Vue en direct depuis Airtable — toujours à jour.
-      <a href="https://airtable.com/app3eozQGL7CHXlxI/pagj9lh4xvKkwX9fo" target="_blank">Ouvrir pour modifier ↗</a>
+    <p class="live-note">Instantané des listes Airtable.
+      <a href="https://airtable.com/app3eozQGL7CHXlxI" target="_blank">Ouvrir pour modifier ↗</a>
     </p>
-    <iframe
-      class="airtable-embed"
-      src="https://airtable.com/embed/app3eozQGL7CHXlxI/shrd7B6G41w6JEjJH"
-      frameborder="0"
-      width="100%"
-      height="620"
-      style="background: transparent; border: 1px solid var(--border); border-radius: 8px;"></iframe>
+    <div class="filters" id="listSelector"></div>
+    <div class="summary" id="listSummary"></div>
+    <div id="listPanel"></div>
   </div>
 
   <div id="view-agenda">
@@ -267,7 +293,101 @@ const EVENTS_DATA = [
   { id: "15", title: "Anniversaire Lou", start: "2026-11-08T00:00:00", allDay: true },
 ];
 
-const DATA_UPDATED_AT = "2026-08-23T09:41:00";
+// Listes (base Airtable "Listes Famille Delangue")
+const LISTE_DATA = [
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Lit bébé / berceau", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Matelas + protège-matelas", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Gigoteuses", qte: 3, statut: "À acheter", note: "Plusieurs tailles" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Draps housses", qte: 4, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Babyphone", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Chambre & couchage", nom: "Veilleuse", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Bodies", qte: 3, statut: "À acheter", note: "0-3 mois" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Pyjamas", qte: 6, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Brassières / gilets", qte: 3, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Bonnets", qte: 2, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Moufles anti-griffures", qte: 2, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Habillement", nom: "Chaussons", qte: 2, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Couches taille naissance", qte: 2, statut: "À acheter", note: "Paquets" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Coton + liniment", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Table à langer + matelas", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Baignoire bébé", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Thermomètre de bain", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Toilette & change", nom: "Trousse de toilette", qte: 1, statut: "À acheter", note: "Savon, brosse douce, ciseaux" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Biberons", qte: 4, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Chauffe-biberon", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Coussin d'allaitement", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Stérilisateur", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Repas & allaitement", nom: "Bavoirs", qte: 6, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Poussette", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Siège auto groupe 0+", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Porte-bébé / écharpe", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Sorties & transport", nom: "Sac à langer", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Déclaration de naissance mairie", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Inscription CAF", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Ajout mutuelle / sécurité sociale", qte: 1, statut: "À acheter", note: "" },
+  { liste: "Affaires Bébé", cat: "Administratif", nom: "Choisir le pédiatre", qte: 1, statut: "À acheter", note: "" },
+];
+
+const STATUT_STYLE = {
+  "À acheter":      { bg: "#FDF3D8", fg: "#8A6D1F" },
+  "Commandé":       { bg: "#DFEAF9", fg: "#2C548A" },
+  "Acheté":         { bg: "#DCF0E3", fg: "#2A6B44" },
+  "Reçu en cadeau": { bg: "#EADFF5", fg: "#5B3B8A" },
+};
+
+const CAT_ORDER = ["Chambre & couchage", "Habillement", "Toilette & change", "Repas & allaitement", "Sorties & transport", "Administratif"];
+
+let listeActive = null;
+
+function renderListe() {
+  const noms = [...new Set(LISTE_DATA.map(i => i.liste))];
+  if (!noms.includes(listeActive)) listeActive = noms[0];
+
+  document.getElementById("listSelector").innerHTML = noms.map(n =>
+    `<button class="chip ${n === listeActive ? "active" : ""}" data-liste="${n}">${n}</button>`
+  ).join("");
+
+  document.querySelectorAll("#listSelector .chip").forEach(btn => {
+    btn.addEventListener("click", () => { listeActive = btn.dataset.liste; renderListe(); });
+  });
+
+  const items = LISTE_DATA.filter(i => i.liste === listeActive);
+  const restant = items.filter(i => i.statut === "À acheter").length;
+
+  document.getElementById("listSummary").innerHTML = `
+    <span><b>${items.length}</b> articles</span>
+    <span><b>${restant}</b> à acheter</span>
+    <span><b>${items.length - restant}</b> réglés</span>
+  `;
+
+  const byCat = {};
+  items.forEach(i => { (byCat[i.cat] = byCat[i.cat] || []).push(i); });
+  const cats = CAT_ORDER.filter(c => byCat[c]);
+  Object.keys(byCat).forEach(c => { if (!cats.includes(c)) cats.push(c); });
+
+  document.getElementById("listPanel").innerHTML = cats.map(cat => {
+    const its = byCat[cat];
+    const reste = its.filter(i => i.statut === "À acheter").length;
+    return `
+      <div class="cat-block">
+        <div class="cat-head">
+          <h3>${cat}</h3>
+          <span class="cat-count">${reste}/${its.length} restants</span>
+        </div>
+        ${its.map(i => {
+          const st = STATUT_STYLE[i.statut] || STATUT_STYLE["À acheter"];
+          return `
+            <div class="list-row">
+              <span class="qty">×${i.qte}</span>
+              <span class="item-name">${i.nom}${i.note ? ` <span class="item-note">— ${i.note}</span>` : ""}</span>
+              <span class="badge" style="background:${st.bg}; color:${st.fg}">${i.statut}</span>
+            </div>`;
+        }).join("")}
+      </div>`;
+  }).join("");
+}
+
+const DATA_UPDATED_AT = "2026-08-23T10:05:00";
 
 const PROJECT_META = {
   "6hJRcVmG3PhWQW3J": "Travail",
@@ -378,6 +498,67 @@ function render() {
 }
 
 
+// --- Éditeur d'instructions partagé ---
+const STORE_KEY = "famille-delangue-instructions-9f3ab7";
+const STORE_URL = "https://textdb.dev/api/data/" + STORE_KEY;
+const LOCAL_KEY = "instructions-backup";
+
+const box = document.getElementById("instructionsBox");
+const statusEl = document.getElementById("editorStatus");
+const saveBtn = document.getElementById("saveBtn");
+let saveTimer = null;
+let lastSaved = "";
+
+function setStatus(msg) { statusEl.textContent = msg; }
+
+async function loadInstructions() {
+  setStatus("Chargement…");
+  try {
+    const r = await fetch(STORE_URL, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const txt = await r.text();
+    box.value = txt;
+    lastSaved = txt;
+    setStatus("À jour");
+  } catch (e) {
+    const backup = localStorage.getItem(LOCAL_KEY);
+    if (backup !== null) {
+      box.value = backup;
+      lastSaved = backup;
+      setStatus("Hors ligne — copie locale affichée");
+    } else {
+      setStatus("Impossible de charger le texte partagé");
+    }
+  }
+}
+
+async function saveInstructions() {
+  const txt = box.value;
+  if (txt === lastSaved) { setStatus("À jour"); return; }
+  setStatus("Enregistrement…");
+  localStorage.setItem(LOCAL_KEY, txt);
+  try {
+    const r = await fetch(STORE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: txt,
+    });
+    if (!r.ok) throw new Error(r.status);
+    lastSaved = txt;
+    const now = new Date();
+    setStatus("Enregistré à " + frTime(now));
+  } catch (e) {
+    setStatus("Échec de l'enregistrement — texte gardé sur cet appareil");
+  }
+}
+
+box.addEventListener("input", () => {
+  setStatus("Modifications non enregistrées…");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveInstructions, 1500);
+});
+saveBtn.addEventListener("click", saveInstructions);
+
 document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
@@ -385,10 +566,14 @@ document.querySelectorAll(".tab").forEach(btn => {
     const view = btn.dataset.view;
     document.getElementById("view-agenda").style.display = view === "agenda" ? "" : "none";
     document.getElementById("view-listes").style.display = view === "listes" ? "" : "none";
+    document.getElementById("view-instructions").style.display = view === "instructions" ? "" : "none";
+    if (view === "instructions" && lastSaved === "") loadInstructions();
   });
 });
 
 render();
+renderListe();
+loadInstructions();
 </script>
 </body>
 </html>
