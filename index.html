@@ -110,12 +110,85 @@
   footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); }
   footer a { color: var(--accent); text-decoration: none; margin: 0 8px; }
   input[type=number] { width: 60px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); font-family: ui-monospace, monospace; font-size: 0.75rem; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 10px 18px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--muted);
+    cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 500; }
+  .cat-block { margin-bottom: 28px; }
+  .cat-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cat-head h3 { font-family: Georgia, serif; font-size: 1rem; margin: 0; font-weight: 600; }
+  .cat-count { font-family: ui-monospace, monospace; font-size: 0.72rem; color: var(--muted); }
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+  .qty {
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .item-name { font-size: 0.9rem; flex: 1; min-width: 0; }
+  .item-note { font-size: 0.75rem; color: var(--muted); }
+  .badge {
+    font-family: ui-monospace, monospace;
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .summary {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .summary b { color: var(--ink); font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header"><h1>Tâches &amp; Agenda</h1></div>
 
+  <div class="tabs">
+    <button class="tab active" data-view="agenda">Tâches &amp; Agenda</button>
+    <button class="tab" data-view="listes">Listes</button>
+  </div>
+
+  <div id="view-listes" style="display:none;">
+    <div class="summary" id="listSummary"></div>
+    <div id="listPanel"></div>
+  </div>
+
+  <div id="view-agenda">
   <div class="grid">
     <div>
       <div class="panel-title">
@@ -134,6 +207,7 @@
       <div class="scroll-area" id="agendaPanel"></div>
     </div>
   </div>
+  </div>
 
   <footer>
     <div id="dataDate"></div>
@@ -143,6 +217,8 @@
       <a href="https://app.todoist.com/app/project/tache-travail-6hJRcVmG3PhWQW3J" target="_blank">Todoist Travail ↗</a>
       ·
       <a href="https://app.todoist.com/app/project/tache-maison-6hJRcVphP37HFv47" target="_blank">Todoist Maison ↗</a>
+      ·
+      <a href="https://airtable.com/app3eozQGL7CHXlxI" target="_blank">Listes Airtable ↗</a>
     </div>
   </footer>
 </div>
@@ -176,7 +252,51 @@ const EVENTS_DATA = [
   { id: "15", title: "Anniversaire Lou", start: "2026-11-08T00:00:00", allDay: true },
 ];
 
-const DATA_UPDATED_AT = "2026-08-23T07:56:00";
+// Liste "Affaires Bébé" (base Airtable "Listes Famille Delangue")
+const LISTE_DATA = [
+  { cat: "Chambre & couchage", nom: "Lit bébé / berceau", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Chambre & couchage", nom: "Matelas + protège-matelas", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Chambre & couchage", nom: "Gigoteuses", qte: 3, statut: "À acheter", note: "Plusieurs tailles" },
+  { cat: "Chambre & couchage", nom: "Draps housses", qte: 4, statut: "À acheter", note: "" },
+  { cat: "Chambre & couchage", nom: "Babyphone", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Chambre & couchage", nom: "Veilleuse", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Habillement", nom: "Bodies", qte: 8, statut: "À acheter", note: "0-3 mois" },
+  { cat: "Habillement", nom: "Pyjamas", qte: 6, statut: "À acheter", note: "" },
+  { cat: "Habillement", nom: "Brassières / gilets", qte: 3, statut: "À acheter", note: "" },
+  { cat: "Habillement", nom: "Bonnets", qte: 2, statut: "À acheter", note: "" },
+  { cat: "Habillement", nom: "Moufles anti-griffures", qte: 2, statut: "À acheter", note: "" },
+  { cat: "Habillement", nom: "Chaussons", qte: 2, statut: "À acheter", note: "" },
+  { cat: "Toilette & change", nom: "Couches taille naissance", qte: 2, statut: "À acheter", note: "Paquets" },
+  { cat: "Toilette & change", nom: "Coton + liniment", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Toilette & change", nom: "Table à langer + matelas", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Toilette & change", nom: "Baignoire bébé", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Toilette & change", nom: "Thermomètre de bain", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Toilette & change", nom: "Trousse de toilette", qte: 1, statut: "À acheter", note: "Savon, brosse douce, ciseaux" },
+  { cat: "Repas & allaitement", nom: "Biberons", qte: 4, statut: "À acheter", note: "" },
+  { cat: "Repas & allaitement", nom: "Chauffe-biberon", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Repas & allaitement", nom: "Coussin d'allaitement", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Repas & allaitement", nom: "Stérilisateur", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Repas & allaitement", nom: "Bavoirs", qte: 6, statut: "À acheter", note: "" },
+  { cat: "Sorties & transport", nom: "Poussette", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Sorties & transport", nom: "Siège auto groupe 0+", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Sorties & transport", nom: "Porte-bébé / écharpe", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Sorties & transport", nom: "Sac à langer", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Administratif", nom: "Déclaration de naissance mairie", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Administratif", nom: "Inscription CAF", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Administratif", nom: "Ajout mutuelle / sécurité sociale", qte: 1, statut: "À acheter", note: "" },
+  { cat: "Administratif", nom: "Choisir le pédiatre", qte: 1, statut: "À acheter", note: "" },
+];
+
+const STATUT_STYLE = {
+  "À acheter":      { bg: "#FDF3D8", fg: "#8A6D1F" },
+  "Commandé":       { bg: "#DFEAF9", fg: "#2C548A" },
+  "Acheté":         { bg: "#DCF0E3", fg: "#2A6B44" },
+  "Reçu en cadeau": { bg: "#EADFF5", fg: "#5B3B8A" },
+};
+
+const CAT_ORDER = ["Chambre & couchage", "Habillement", "Toilette & change", "Repas & allaitement", "Sorties & transport", "Administratif"];
+
+const DATA_UPDATED_AT = "2026-08-23T08:22:00";
 
 const PROJECT_META = {
   "6hJRcVmG3PhWQW3J": "Travail",
@@ -286,7 +406,59 @@ function render() {
   document.getElementById("dataDate").textContent = `Données affichées au ${frDateTime(new Date(DATA_UPDATED_AT))}`;
 }
 
+function renderListe() {
+  const total = LISTE_DATA.length;
+  const restant = LISTE_DATA.filter(i => i.statut === "À acheter").length;
+  const fait = total - restant;
+
+  document.getElementById("listSummary").innerHTML = `
+    <span><b>${total}</b> articles</span>
+    <span><b>${restant}</b> à acheter</span>
+    <span><b>${fait}</b> réglés</span>
+  `;
+
+  const byCat = {};
+  LISTE_DATA.forEach(i => { (byCat[i.cat] = byCat[i.cat] || []).push(i); });
+
+  const cats = CAT_ORDER.filter(c => byCat[c]);
+  Object.keys(byCat).forEach(c => { if (!cats.includes(c)) cats.push(c); });
+
+  document.getElementById("listPanel").innerHTML = cats.map(cat => {
+    const items = byCat[cat];
+    const reste = items.filter(i => i.statut === "À acheter").length;
+    return `
+      <div class="cat-block">
+        <div class="cat-head">
+          <h3>${cat}</h3>
+          <span class="cat-count">${reste}/${items.length} restants</span>
+        </div>
+        ${items.map(i => {
+          const st = STATUT_STYLE[i.statut] || STATUT_STYLE["À acheter"];
+          return `
+            <div class="list-row">
+              <span class="qty">×${i.qte}</span>
+              <span class="item-name">${i.nom}${i.note ? ` <span class="item-note">— ${i.note}</span>` : ""}</span>
+              <span class="badge" style="background:${st.bg}; color:${st.fg}">${i.statut}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }).join("");
+}
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const view = btn.dataset.view;
+    document.getElementById("view-agenda").style.display = view === "agenda" ? "" : "none";
+    document.getElementById("view-listes").style.display = view === "listes" ? "" : "none";
+  });
+});
+
 render();
+renderListe();
 </script>
 </body>
 </html>
